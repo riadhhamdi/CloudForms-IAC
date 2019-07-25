@@ -1,0 +1,82 @@
+#!/bin/bash 
+ 
+######## Defining colors ###########
+
+he1='\e[40;38;5;82m'
+he2='\e[30;48;5;82m'
+he3='\e[0m'
+lb='\e[94m'
+au='\e[0m'
+gr='\e[36m'
+echo -e "${he1} CloudForms IAC Tool ${he2} LDC Group ${he3}"
+
+## First Usage of the script is to push a specific branch
+case $1 in
+export)
+echo   
+echo -e "${lb} Enter Git repository URI | example: https://gitlab.com/grplabsidc/test.git ${au}"
+#read GITREPO 
+read -p "git repository: " GITREPO
+echo -e "${lb} Choose the environment [DEV, QA, PRD] (you may another choose a suffix) ${au} "
+read -p "export suffix: " BRANCH
+#read BRANCH
+GITDIR=$(echo $GITREPO |awk -F '/' '{print $NF}'  |awk -F '.git' '{print $1}')
+cd /root 
+rm -rf /root/$GITDIR
+rm -rf /root/CFME-export-$BRANCH
+###########################################################################
+##      Creating a local export directory
+###########################################################################
+mkdir -p /root/CFME-export-$BRANCH
+echo -n "exporting "
+miqexport all /root/CFME-export-$BRANCH
+
+###########################################################################
+##       Intiating Git Repo and moving to the branch
+###########################################################################
+git clone $GITREPO
+cd $GITDIR ; git checkout $BRANCH || git branch $BRANCH 
+
+###########################################################################
+##        Copying CFME Objects and commiting
+###########################################################################
+rm -rf ./*
+yes | cp -r /root/CFME-export-$BRANCH/* .
+sed -i sed '/tenant_name: LDC/d' service_catalogs/* 
+git add *
+git commit -a -m "pushing all into the branch "
+git tag $(date '+%Y-%m-%d_%H-%M')
+git push origin $BRANCH --tags ;; 
+
+import)
+
+
+echo -e "${lb} Enter Git repository URI | example: https://gitlab.com/grplabsidc/test.git ${au}"
+echo 
+#read GITREPO
+read -p "git repository: " GITREPO
+GITDIR=$(echo $GITREPO |awk -F '/' '{print $NF}'  |awk -F '.git' '{print $1}')
+rm -rf /tmp/$GITDIR
+cd /tmp
+git clone $GITREPO
+cd /tmp/${GITDIR}
+
+echo -e "${lb} Enter the tag to import from ${au}"
+echo "Below the list of available tags | latest will point to the latest tag"
+echo -e "${gr} $(git tag -l) ${au}"
+#read TAG
+read -p "chosen version: " TAG
+
+if [ $TAG == "latest" ]
+then 
+TAG=$(git tag | tail -1)
+fi 
+
+git checkout tags/${TAG}
+miqimport --overwrite all  .
+;;
+
+*) echo "Usage cfme-objets export | import";;
+esac 
+
+
