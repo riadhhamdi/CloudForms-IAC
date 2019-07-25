@@ -1,0 +1,42 @@
+= Cloudforms/ManageIQ Objects export/import script 
+
+This script is useful to export code from one environment (Dev for eg) to another environment (Prod for eg)
+
+== Information
+
+== Install
+
+
+* Get latest files from github
+----
+rm -rf cloudforms-iac
+git clone https://github.com/riadhhamdi/cloudforms-iac.git 
+----
+
+* Install files to bin directory 
+----
+cd cloudforms-iac
+make install
+----
+
+
+== Export command
+----
+
+Usage: cfme-objects export  
+
+This command exports the all objects into the <exportdest>,
+which is a directory called CFME-export-<alias> the export script will ask for this alias 
+All the code is pushed later to a git repo chosen by the user. 
+----
+
+== Import Command
+----
+Usage: cfme-objects import
+
+This command will import the all objects from a specific tag within a git repo
+----
+
+== Who do I talk to?
+* Riadh HAMDI (ryadh.hamdi@gmail.com)
+
